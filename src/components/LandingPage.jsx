@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import Hero from './Hero';
+import LoginModal from './LoginModal';
 
 const LandingPage = () => {
+  const [showLogin, setShowLogin] = useState(false);
+
   return (
     <div>
       {/* Header */}
@@ -14,7 +17,7 @@ const LandingPage = () => {
             <li><a href="#requirements">Requirements</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
-          <button className="login-btn">Login</button>
+          <button className="login-btn" onClick={() => setShowLogin(true)}>Login</button>
         </nav>
       </header>
 
@@ -127,6 +130,9 @@ const LandingPage = () => {
           <p>© 2025 EstablishedLoans. All rights reserved.</p>
         </div>
       </footer>
+
+      {/* Login Modal */}
+      <LoginModal show={showLogin} onClose={() => setShowLogin(false)} />
     </div>
   );
 };
