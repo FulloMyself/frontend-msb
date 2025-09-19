@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import API from '../api'; // make sure API.baseURL points to https://msb-backend-5km0.onrender.com
+import API from '../api'; // ensure API.baseURL points to deployed backend
 import { motion, AnimatePresence } from 'framer-motion';
 import './LoginModal.css';
 
@@ -9,12 +9,15 @@ const LoginModal = ({ show, onClose }) => {
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phone, setPhone] = useState(''); // optional field for backend
 
   // --- LOGIN ---
   const handleLogin = async () => {
     try {
       const res = await API.post('/api/auth/login', { email, password });
-      // store user info (token optional for now)
+
+      // store token and user info
+      localStorage.setItem('token', res.data.token); // important for auth
       localStorage.setItem('role', res.data.user.role);
       localStorage.setItem('userName', res.data.user.name || '');
       localStorage.setItem('userId', res.data.user.id);
@@ -34,14 +37,22 @@ const LoginModal = ({ show, onClose }) => {
     }
 
     try {
-      await API.post('/api/auth/register', { name, email, password });
+      await API.post('/api/auth/register', {
+        name,
+        email,
+        password,
+        phone, // send phone (can be empty string)
+      });
+
       alert('Registration successful! Please login.');
       setIsRegister(false);
+
       // clear registration fields
       setName('');
       setEmail('');
       setPassword('');
       setConfirmPassword('');
+      setPhone('');
     } catch (err) {
       alert('Registration failed: ' + (err.response?.data?.error || err.message));
     }
@@ -137,6 +148,15 @@ const LoginModal = ({ show, onClose }) => {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   placeholder="Confirm your password"
                   required
+                />
+              </div>
+              <div className="form-group">
+                <label>Phone (optional)</label>
+                <input
+                  type="text"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="Enter your phone number"
                 />
               </div>
               <button className="btn register-btn" onClick={handleRegister}>Register</button>
