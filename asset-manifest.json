@@ -1,10 +1,13 @@
 {
   "files": {
+    "main.css": "/frontend-msb/static/css/main.9226b004.css",
     "main.js": "/frontend-msb/static/js/main.62741ba7.js",
     "index.html": "/frontend-msb/index.html",
+    "main.9226b004.css.map": "/frontend-msb/static/css/main.9226b004.css.map",
     "main.62741ba7.js.map": "/frontend-msb/static/js/main.62741ba7.js.map"
   },
   "entrypoints": [
+    "static/css/main.9226b004.css",
     "static/js/main.62741ba7.js"
   ]
 }
