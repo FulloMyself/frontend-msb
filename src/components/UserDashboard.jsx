@@ -14,12 +14,14 @@ const UserDashboard = () => {
 
   // User info & documents
   const [user, setUser] = useState(null);
+
   const [documents, setDocuments] = useState({
-    idCopy: null,
-    payslip: null,
-    proofResidence: null,
-    bankStatement: null,
-  });
+  idCopy: null,
+  payslip: null,
+  proofOfResidence: null,  // <- rename from proofResidence
+  bankStatement: null
+});
+
 
   // My loans
   const [myLoans, setMyLoans] = useState([]);
