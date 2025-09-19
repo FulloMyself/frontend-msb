@@ -1,24 +1,102 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import API from '../api';
 import './UserDashboard.css';
 
 const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState('apply-loan');
+
+  // Loan form state
   const [loanAmount, setLoanAmount] = useState('');
   const [loanPurpose, setLoanPurpose] = useState('');
   const [repaymentPeriod, setRepaymentPeriod] = useState('');
   const [monthlyIncome, setMonthlyIncome] = useState('');
   const [loanReason, setLoanReason] = useState('');
 
+  // Documents state
+  const [documents, setDocuments] = useState({
+    idCopy: null,
+    payslip: null,
+    proofResidence: null,
+    bankStatement: null,
+  });
+
+  // My Loans
+  const [myLoans, setMyLoans] = useState([]);
+
   const handleTabClick = (tab) => setActiveTab(tab);
 
-  const applyLoan = () => {
-    alert(`Loan Applied:\nAmount: R${loanAmount}\nPurpose: ${loanPurpose}\nRepayment: ${repaymentPeriod} months`);
-    // Reset form
-    setLoanAmount('');
-    setLoanPurpose('');
-    setRepaymentPeriod('');
-    setMonthlyIncome('');
-    setLoanReason('');
+  // Fetch user's loans
+  useEffect(() => {
+    const fetchLoans = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const res = await API.get('/loans/my-loans', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setMyLoans(res.data.loans);
+      } catch (err) {
+        console.error('Failed to fetch loans:', err);
+      }
+    };
+    fetchLoans();
+  }, []);
+
+  const applyLoan = async () => {
+    if (!loanAmount || !loanPurpose || !repaymentPeriod || !monthlyIncome) {
+      alert('Please fill all required fields.');
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      await API.post(
+        '/loans/apply',
+        { amount: loanAmount, purpose: loanPurpose, repaymentPeriod, monthlyIncome, additionalInfo: loanReason },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      alert('Loan application submitted successfully!');
+      setLoanAmount('');
+      setLoanPurpose('');
+      setRepaymentPeriod('');
+      setMonthlyIncome('');
+      setLoanReason('');
+
+      // Refresh My Loans
+      const res = await API.get('/loans/my-loans', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setMyLoans(res.data.loans);
+    } catch (err) {
+      alert('Failed to submit loan: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleFileChange = (e, type) => {
+    setDocuments({ ...documents, [type]: e.target.files[0] });
+  };
+
+  const uploadDocument = async (type) => {
+    if (!documents[type]) {
+      alert('Please select a file to upload.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('document', documents[type]);
+    formData.append('type', type);
+
+    try {
+      const token = localStorage.getItem('token');
+      await API.post('/documents/upload', formData, {
+        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
+      });
+
+      alert(`${type} uploaded successfully!`);
+      setDocuments({ ...documents, [type]: null });
+    } catch (err) {
+      alert('Failed to upload document: ' + (err.response?.data?.message || err.message));
+    }
   };
 
   return (
@@ -27,13 +105,13 @@ const UserDashboard = () => {
         <h2>User Dashboard</h2>
         <div>
           <span className="user-info">John Doe</span>
-          <button className="logout-btn" onClick={() => alert('Logged out!')}>Logout</button>
+          <button className="logout-btn" onClick={() => { localStorage.clear(); window.location.href = '#/'; }}>Logout</button>
         </div>
       </div>
 
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-number">0</div>
+          <div className="stat-number">{myLoans.filter(l => l.status === 'active').length}</div>
           <div>Active Loans</div>
         </div>
         <div className="stat-card">
@@ -41,7 +119,7 @@ const UserDashboard = () => {
           <div>Pending Documents</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number">R1500</div>
+          <div className="stat-number">R{myLoans.reduce((sum, l) => sum + l.amount, 0)}</div>
           <div>Total Applied</div>
         </div>
       </div>
@@ -59,14 +137,7 @@ const UserDashboard = () => {
           <div className="loan-form">
             <div className="form-group">
               <label htmlFor="loan-amount">Loan Amount (R300 - R4,000)</label>
-              <input
-                type="number"
-                id="loan-amount"
-                min="300"
-                max="4000"
-                value={loanAmount}
-                onChange={(e) => setLoanAmount(e.target.value)}
-              />
+              <input type="number" id="loan-amount" min="300" max="4000" value={loanAmount} onChange={(e) => setLoanAmount(e.target.value)} />
             </div>
             <div className="form-group">
               <label htmlFor="loan-purpose">Loan Purpose</label>
@@ -94,13 +165,7 @@ const UserDashboard = () => {
             </div>
             <div className="form-group">
               <label htmlFor="loan-reason">Additional Information</label>
-              <textarea
-                id="loan-reason"
-                rows="3"
-                placeholder="Please provide additional details about your loan request"
-                value={loanReason}
-                onChange={(e) => setLoanReason(e.target.value)}
-              />
+              <textarea id="loan-reason" rows="3" placeholder="Please provide additional details about your loan request" value={loanReason} onChange={(e) => setLoanReason(e.target.value)} />
             </div>
           </div>
           <button className="btn" onClick={applyLoan}>Submit Loan Application</button>
@@ -111,9 +176,32 @@ const UserDashboard = () => {
       {activeTab === 'my-loans' && (
         <div className="tab-content">
           <h3>My Loan Applications</h3>
-          <div id="loans-list">
-            <p>No loan applications found.</p>
-          </div>
+          <table className="user-table">
+            <thead>
+              <tr>
+                <th>Amount</th>
+                <th>Purpose</th>
+                <th>Period</th>
+                <th>Status</th>
+                <th>Date Applied</th>
+              </tr>
+            </thead>
+            <tbody>
+              {myLoans.length === 0 ? (
+                <tr><td colSpan="5">No loan applications found.</td></tr>
+              ) : (
+                myLoans.map((loan) => (
+                  <tr key={loan.id}>
+                    <td>R{loan.amount}</td>
+                    <td>{loan.purpose}</td>
+                    <td>{loan.repaymentPeriod} months</td>
+                    <td>{loan.status}</td>
+                    <td>{new Date(loan.createdAt).toLocaleDateString()}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       )}
 
@@ -122,45 +210,17 @@ const UserDashboard = () => {
         <div className="tab-content">
           <h3>Upload Required Documents</h3>
           <p>Please upload all required documents to process your loan application:</p>
-          <div className="document-upload">
-            <div className="upload-area">
-              <strong>Certified ID Copy</strong><br />
-              <input type="file" id="id-copy" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
-              <span onClick={() => document.getElementById('id-copy').click()}>Click to upload or drag and drop</span>
-              <div id="id-copy-status"></div>
-            </div>
-          </div>
 
-          <div className="document-upload">
-            <div className="upload-area">
-              <strong>Latest Payslip</strong><br />
-              <input type="file" id="payslip" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
-              <span onClick={() => document.getElementById('payslip').click()}>Click to upload or drag and drop</span>
-              <div id="payslip-status"></div>
+          {['idCopy', 'payslip', 'proofResidence', 'bankStatement'].map((doc) => (
+            <div key={doc} className="document-upload">
+              <div className="upload-area">
+                <strong>{doc.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</strong><br />
+                <input type="file" id={doc} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, doc)} />
+                <span onClick={() => document.getElementById(doc).click()}>Click to upload or drag and drop</span>
+                <button className="btn" onClick={() => uploadDocument(doc)} style={{ marginTop: '5px' }}>Upload</button>
+              </div>
             </div>
-          </div>
-
-          <div className="document-upload">
-            <div className="upload-area">
-              <strong>Proof of Residence</strong><br />
-              <input type="file" id="proof-residence" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
-              <span onClick={() => document.getElementById('proof-residence').click()}>Click to upload or drag and drop</span>
-              <div id="proof-residence-status"></div>
-            </div>
-          </div>
-
-          <div className="document-upload">
-            <div className="upload-area">
-              <strong>3 Months Bank Statement</strong><br />
-              <input type="file" id="bank-statement" accept=".pdf" style={{ display: 'none' }} />
-              <span onClick={() => document.getElementById('bank-statement').click()}>Click to upload or drag and drop</span>
-              <div id="bank-statement-status"></div>
-            </div>
-          </div>
-
-          <div className="document-list" id="uploaded-documents">
-            {/* Uploaded documents will appear here */}
-          </div>
+          ))}
         </div>
       )}
     </div>
