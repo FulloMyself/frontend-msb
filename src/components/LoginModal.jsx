@@ -13,9 +13,10 @@ const LoginModal = ({ show, onClose }) => {
   const handleLogin = async () => {
     try {
       const res = await API.post('/auth/login', { email, password });
+// store token and role
+localStorage.setItem('token', res.data.token);
+localStorage.setItem('role', res.data.user.role);
 
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.user.role);
 
       if (res.data.user.role === 'user') window.location.href = '#/user-dashboard';
       else window.location.href = '#/admin-dashboard';
@@ -29,7 +30,8 @@ const LoginModal = ({ show, onClose }) => {
       return alert('Passwords do not match!');
     }
     try {
-      await API.post('/auth/register', { name, email, password });
+      await API.post('/auth/register', { name, email, password, phone });
+
       alert('Registration successful, please login!');
       setIsRegister(false);
     } catch (err) {

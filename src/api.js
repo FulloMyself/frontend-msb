@@ -1,7 +1,11 @@
+// frontend/src/api.js
 import axios from 'axios';
 
+const BASE = process.env.REACT_APP_API_URL;
+
 const API = axios.create({
-  baseURL: 'https://msb-backend-5km0.onrender.com/api', // <--- include /api
+  baseURL: `${BASE}/api`,
+  timeout: 15000,
 });
 
 export default API;
