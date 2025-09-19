@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import './AdminDashboard.css';
 import axios from 'axios';
+import './AdminDashboard.css';
 
 const tabVariants = {
   hidden: { opacity: 0, y: 20 },
@@ -14,67 +14,73 @@ const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
   const [loans, setLoans] = useState([]);
   const [documents, setDocuments] = useState([]);
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    pendingLoans: 0,
-    totalLoanAmount: 0,
-  });
 
-  const token = localStorage.getItem('token');
-
-  useEffect(() => {
-    if (!token) return;
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [usersRes, loansRes, docsRes] = await Promise.all([
-        axios.get('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('/api/admin/loans', { headers: { Authorization: `Bearer ${token}` } }),
-        axios.get('/api/admin/documents', { headers: { Authorization: `Bearer ${token}` } }),
-      ]);
-
-      setUsers(usersRes.data.users);
-      setLoans(loansRes.data.loans);
-      setDocuments(docsRes.data.documents);
-
-      setStats({
-        totalUsers: usersRes.data.users.length,
-        pendingLoans: loansRes.data.loans.filter(l => l.status === 'pending').length,
-        totalLoanAmount: loansRes.data.loans.reduce((sum, l) => sum + l.amount, 0),
-      });
-    } catch (err) {
-      console.error('Error fetching admin data:', err);
-    }
-  };
+  const token = localStorage.getItem('token'); // admin auth token if needed
 
   const switchTab = (tab) => setActiveTab(tab);
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('role');
-    window.location.href = '#/';
-  };
+  // ==========================
+  // FETCH DATA
+  // ==========================
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [usersRes, loansRes, docsRes] = await Promise.all([
+          axios.get('/api/users', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/loans', { headers: { Authorization: `Bearer ${token}` } }),
+          axios.get('/api/documents', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-  const updateLoanStatus = async (loanId, status) => {
+        setUsers(usersRes.data);
+        setLoans(loansRes.data);
+        setDocuments(docsRes.data);
+      } catch (err) {
+        console.error('Error fetching admin data:', err);
+      }
+    };
+
+    fetchData();
+  }, [token]);
+
+  // ==========================
+  // UPDATE LOAN STATUS
+  // ==========================
+  const updateLoanStatus = async (loanId, newStatus) => {
     try {
-      await axios.patch(`/api/admin/loans/${loanId}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
-      fetchData(); // refresh data
+      const res = await axios.patch(
+        `/api/loan/${loanId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setLoans((prev) =>
+        prev.map((loan) => (loan._id === loanId ? res.data.loan : loan))
+      );
     } catch (err) {
-      console.error(err);
+      console.error('Error updating loan status:', err);
     }
   };
 
-  const updateDocumentStatus = async (docId, status) => {
+  // ==========================
+  // UPDATE DOCUMENT STATUS
+  // ==========================
+  const updateDocumentStatus = async (docId, newStatus) => {
     try {
-      await axios.patch(`/api/admin/documents/${docId}`, { status }, { headers: { Authorization: `Bearer ${token}` } });
-      fetchData(); // refresh data
+      const res = await axios.patch(
+        `/api/document/${docId}/status`,
+        { status: newStatus },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setDocuments((prev) =>
+        prev.map((doc) => (doc._id === docId ? res.data.document : doc))
+      );
     } catch (err) {
-      console.error(err);
+      console.error('Error updating document status:', err);
     }
   };
 
+  // ==========================
+  // RENDER
+  // ==========================
   return (
     <div id="admin-dashboard" className="dashboard">
       {/* Navbar */}
@@ -82,22 +88,31 @@ const AdminDashboard = () => {
         <h2>Admin Dashboard</h2>
         <div>
           <span className="user-info" id="admin-name-display">Admin User</span>
-          <button className="logout-btn" onClick={handleLogout}>Logout</button>
+          <button
+            className="logout-btn"
+            onClick={() => {
+              localStorage.removeItem('token');
+              localStorage.removeItem('role');
+              window.location.href = '#/';
+            }}
+          >
+            Logout
+          </button>
         </div>
       </div>
 
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-number" id="total-users">{stats.totalUsers}</div>
+          <div className="stat-number">{users.length}</div>
           <div>Total Users</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number" id="pending-loans">{stats.pendingLoans}</div>
+          <div className="stat-number">{loans.filter(l => l.status === 'pending').length}</div>
           <div>Pending Loans</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number" id="total-loan-amount">R{stats.totalLoanAmount}</div>
+          <div className="stat-number">R{loans.reduce((sum, l) => sum + l.amount, 0)}</div>
           <div>Total Loan Amount</div>
         </div>
       </div>
@@ -109,7 +124,7 @@ const AdminDashboard = () => {
         <button className={`tab ${activeTab === 'documents' ? 'active' : ''}`} onClick={() => switchTab('documents')}>Documents</button>
       </div>
 
-      {/* Tab Content with Animations */}
+      {/* Tab Content */}
       <AnimatePresence exitBeforeEnter>
         {activeTab === 'users' && (
           <motion.div key="users" className="tab-content" variants={tabVariants} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
@@ -122,18 +137,16 @@ const AdminDashboard = () => {
                   <th>Phone</th>
                   <th>ID Number</th>
                   <th>Registration Date</th>
-                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {users.map(user => (
-                  <tr key={user._id}>
-                    <td>{user.name}</td>
-                    <td>{user.email}</td>
-                    <td>{user.phone}</td>
-                    <td>{user.idNumber}</td>
-                    <td>{new Date(user.createdAt).toLocaleDateString()}</td>
-                    <td><button className="view-btn" onClick={() => alert(`View ${user.name}`)}>View</button></td>
+                {users.map(u => (
+                  <tr key={u._id}>
+                    <td>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>{u.phone}</td>
+                    <td>{u.idNumber}</td>
+                    <td>{new Date(u.createdAt).toLocaleDateString()}</td>
                   </tr>
                 ))}
               </tbody>
@@ -163,15 +176,10 @@ const AdminDashboard = () => {
                     <td>R{loan.amount}</td>
                     <td>{loan.purpose}</td>
                     <td>{loan.period}</td>
-                    <td><span className={`status-badge status-${loan.status}`}>{loan.status}</span></td>
+                    <td><span className={`status-badge status-${loan.status.replace(' ', '-')}`}>{loan.status}</span></td>
                     <td>{new Date(loan.createdAt).toLocaleDateString()}</td>
                     <td>
-                      <button className="view-btn" onClick={() => alert(`View ${loan.userName}'s loan`)}>View</button>
-                      <select
-                        value={loan.status}
-                        onChange={(e) => updateLoanStatus(loan._id, e.target.value)}
-                        style={{ marginLeft: '10px', padding: '5px' }}
-                      >
+                      <select value={loan.status} onChange={(e) => updateLoanStatus(loan._id, e.target.value)} style={{ marginLeft: '10px', padding: '5px' }}>
                         <option value="pending">Pending</option>
                         <option value="under-review">Under Review</option>
                         <option value="approved">Approved</option>
@@ -204,14 +212,9 @@ const AdminDashboard = () => {
                     <td>{doc.userName}</td>
                     <td>{doc.type}</td>
                     <td>{new Date(doc.createdAt).toLocaleDateString()}</td>
-                    <td><span className={`status-badge status-${doc.status}`}>{doc.status}</span></td>
+                    <td><span className={`status-badge status-${doc.status.replace(' ', '-')}`}>{doc.status}</span></td>
                     <td>
-                      <button className="view-btn" onClick={() => window.open(doc.url, '_blank')}>View</button>
-                      <select
-                        value={doc.status}
-                        onChange={(e) => updateDocumentStatus(doc._id, e.target.value)}
-                        style={{ marginLeft: '10px', padding: '5px' }}
-                      >
+                      <select value={doc.status} onChange={(e) => updateDocumentStatus(doc._id, e.target.value)} style={{ marginLeft: '10px', padding: '5px' }}>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
                         <option value="rejected">Rejected</option>
