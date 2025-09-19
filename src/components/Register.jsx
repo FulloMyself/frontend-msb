@@ -10,7 +10,8 @@ function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await API.post('/register', { email, password });
+      // Updated to match backend route
+      await API.post('/auth/register', { email, password });
       alert('Registration successful!');
       navigate('/login');
     } catch (err) {
@@ -22,7 +23,11 @@ function Register() {
     <div>
       <h2>Register</h2>
       <form onSubmit={handleSubmit}>
-        <input placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
         <input
           placeholder="Password"
           type="password"

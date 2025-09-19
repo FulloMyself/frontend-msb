@@ -10,7 +10,11 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const res = await API.post('/login', { email, password });
+      // before
+// const res = await API.post('/login', { email, password });
+// after
+const res = await API.post('/auth/login', { email, password });
+
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.role); // 'user' or 'admin'
 
