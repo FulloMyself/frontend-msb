@@ -1,19 +1,15 @@
 import React, { useState } from 'react';
 
-function Hero() {
+const Hero = () => {
   const [amount, setAmount] = useState(5000);
 
   const handleSliderChange = (e) => setAmount(parseInt(e.target.value));
-
-  const handleApplyClick = () => {
-    alert('Redirecting to secure application form...');
-  };
+  const handleApplyClick = () => alert('Redirecting to secure application form...');
 
   return (
     <section className="hero" id="home">
       <div className="container">
         <div className="hero-content">
-          {/* Hero Text */}
           <div className="hero-text">
             <div className="rating-badge">
               <span className="rating-stars">⭐⭐⭐⭐⭐</span>
@@ -21,11 +17,11 @@ function Hero() {
             </div>
             <h1>Get Your Loan Approved in Minutes</h1>
             <p>
-              Fast, secure, and hassle-free personal loans up to R15,000. Same-day funding available with competitive rates and flexible terms.
+              Fast, secure, and hassle-free personal loans up to R15,000. Same-day funding
+              available with competitive rates and flexible terms.
             </p>
           </div>
 
-          {/* Calculator Card */}
           <div className="calculator-card">
             <div className="calculator-header">
               <h3>Quick Loan Calculator</h3>
@@ -50,7 +46,7 @@ function Hero() {
                   justifyContent: 'space-between',
                   fontSize: '0.9rem',
                   color: '#666',
-                  marginTop: '0.5rem'
+                  marginTop: '0.5rem',
                 }}
               >
                 <span>R1,000</span>
@@ -66,6 +62,6 @@ function Hero() {
       </div>
     </section>
   );
-}
+};
 
 export default Hero;
