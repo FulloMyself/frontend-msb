@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import API from '../api';
-import './LoginModal.css'; // Make sure to create this CSS file for styling
+import './LoginModal.css'; // Ensure this file exists for styling
 
 const LoginModal = ({ show, onClose, toggleToRegister }) => {
   const [email, setEmail] = useState('');
@@ -59,7 +59,13 @@ const LoginModal = ({ show, onClose, toggleToRegister }) => {
 
         <div className="register-link">
           <span>Don't have an account? </span>
-          <button className="toggle-register-btn" onClick={toggleToRegister}>
+          <button
+            className="toggle-register-btn"
+            onClick={() => {
+              onClose(); // Close LoginModal
+              toggleToRegister(); // Open RegisterModal
+            }}
+          >
             Register here
           </button>
         </div>
