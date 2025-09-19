@@ -1,4 +1,4 @@
-/* UserDashboard.css */
+/* AdminDashboard.css */
 
 /* General Dashboard Styling */
 .dashboard {
@@ -102,80 +102,60 @@
   background: #f7fafc;
   padding: 1rem;
   border-radius: 10px;
-  margin-bottom: 1.5rem;
+  overflow-x: auto;
 }
 
-/* Loan Form Styling */
-.loan-form .form-group {
-  margin-bottom: 1rem;
-}
-
-.loan-form label {
-  font-weight: 500;
-  margin-bottom: 0.3rem;
-  display: block;
-  color: #2d3748;
-}
-
-.loan-form input,
-.loan-form select,
-.loan-form textarea {
+/* Tables */
+.user-table {
   width: 100%;
-  padding: 0.5rem 0.8rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  font-size: 1rem;
-  outline: none;
-  transition: border 0.2s ease;
+  border-collapse: collapse;
 }
 
-.loan-form input:focus,
-.loan-form select:focus,
-.loan-form textarea:focus {
-  border-color: #3182ce;
+.user-table th, .user-table td {
+  padding: 0.8rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid #e2e8f0;
 }
 
-/* Buttons */
-.btn {
-  padding: 0.6rem 1.2rem;
+.user-table th {
+  background-color: #edf2f7;
+  font-weight: 600;
+}
+
+.user-table td {
+  font-weight: 500;
+  color: #4a5568;
+}
+
+/* Buttons in Table */
+.view-btn {
+  padding: 0.3rem 0.8rem;
   background-color: #3182ce;
   color: #fff;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
   transition: background 0.3s ease;
 }
 
-.btn:hover {
+.view-btn:hover {
   background-color: #2b6cb0;
 }
 
-/* Document Upload */
-.document-upload {
-  margin-bottom: 1rem;
+/* Status Badges */
+.status-badge {
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-transform: capitalize;
+  color: #fff;
 }
 
-.upload-area {
-  background: #edf2f7;
-  padding: 1rem;
-  border-radius: 8px;
-  cursor: pointer;
-  text-align: center;
-  transition: background 0.3s ease;
-}
-
-.upload-area:hover {
-  background: #e2e8f0;
-}
-
-.upload-area input[type="file"] {
-  display: none;
-}
-
-#uploaded-documents {
-  margin-top: 1rem;
-}
+.status-pending { background-color: #ed8936; }
+.status-under-review { background-color: #3182ce; }
+.status-approved { background-color: #38a169; }
+.status-rejected { background-color: #e53e3e; }
 
 /* Responsive */
 @media screen and (max-width: 768px) {

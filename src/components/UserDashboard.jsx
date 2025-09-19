@@ -1,52 +1,39 @@
-import React, { useState } from "react";
-import "./UserDashboard.css"; // Create this stylesheet for styling
+import React, { useState } from 'react';
+import './UserDashboard.css';
 
 const UserDashboard = () => {
-  const [activeTab, setActiveTab] = useState("apply-loan");
-  const [loans, setLoans] = useState([]);
-  const [documents, setDocuments] = useState({});
+  const [activeTab, setActiveTab] = useState('apply-loan');
+  const [loanAmount, setLoanAmount] = useState('');
+  const [loanPurpose, setLoanPurpose] = useState('');
+  const [repaymentPeriod, setRepaymentPeriod] = useState('');
+  const [monthlyIncome, setMonthlyIncome] = useState('');
+  const [loanReason, setLoanReason] = useState('');
 
-  const handleFileUpload = (e, type) => {
-    const file = e.target.files[0];
-    if (file) {
-      setDocuments((prev) => ({ ...prev, [type]: file.name }));
-    }
-  };
+  const handleTabClick = (tab) => setActiveTab(tab);
 
   const applyLoan = () => {
-    const newLoan = {
-      id: loans.length + 1,
-      amount: 1500,
-      status: "Pending",
-    };
-    setLoans([...loans, newLoan]);
-    alert("Loan application submitted!");
-  };
-
-  const logout = () => {
-    localStorage.clear();
-    window.location.href = "#/login";
+    alert(`Loan Applied:\nAmount: R${loanAmount}\nPurpose: ${loanPurpose}\nRepayment: ${repaymentPeriod} months`);
+    // Reset form
+    setLoanAmount('');
+    setLoanPurpose('');
+    setRepaymentPeriod('');
+    setMonthlyIncome('');
+    setLoanReason('');
   };
 
   return (
-    <div id="user-dashboard" className="card dashboard active">
-      {/* Nav Bar */}
+    <div id="user-dashboard" className="card dashboard">
       <div className="nav-bar">
         <h2>User Dashboard</h2>
         <div>
-          <span className="user-info">
-            {localStorage.getItem("userName") || "John Doe"}
-          </span>
-          <button className="logout-btn" onClick={logout}>
-            Logout
-          </button>
+          <span className="user-info">John Doe</span>
+          <button className="logout-btn" onClick={() => alert('Logged out!')}>Logout</button>
         </div>
       </div>
 
-      {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-number">{loans.length}</div>
+          <div className="stat-number">0</div>
           <div>Active Loans</div>
         </div>
         <div className="stat-card">
@@ -59,40 +46,31 @@ const UserDashboard = () => {
         </div>
       </div>
 
-      {/* Tabs */}
       <div className="tabs">
-        <button
-          className={`tab ${activeTab === "apply-loan" ? "active" : ""}`}
-          onClick={() => setActiveTab("apply-loan")}
-        >
-          Apply for Loan
-        </button>
-        <button
-          className={`tab ${activeTab === "my-loans" ? "active" : ""}`}
-          onClick={() => setActiveTab("my-loans")}
-        >
-          My Loans
-        </button>
-        <button
-          className={`tab ${activeTab === "documents" ? "active" : ""}`}
-          onClick={() => setActiveTab("documents")}
-        >
-          Documents
-        </button>
+        <button className={`tab ${activeTab === 'apply-loan' ? 'active' : ''}`} onClick={() => handleTabClick('apply-loan')}>Apply for Loan</button>
+        <button className={`tab ${activeTab === 'my-loans' ? 'active' : ''}`} onClick={() => handleTabClick('my-loans')}>My Loans</button>
+        <button className={`tab ${activeTab === 'documents' ? 'active' : ''}`} onClick={() => handleTabClick('documents')}>Documents</button>
       </div>
 
       {/* Apply Loan Tab */}
-      {activeTab === "apply-loan" && (
-        <div id="apply-loan" className="tab-content active">
+      {activeTab === 'apply-loan' && (
+        <div className="tab-content active">
           <h3>Apply for a New Loan</h3>
           <div className="loan-form">
             <div className="form-group">
               <label htmlFor="loan-amount">Loan Amount (R300 - R4,000)</label>
-              <input type="number" id="loan-amount" min="300" max="4000" />
+              <input
+                type="number"
+                id="loan-amount"
+                min="300"
+                max="4000"
+                value={loanAmount}
+                onChange={(e) => setLoanAmount(e.target.value)}
+              />
             </div>
             <div className="form-group">
               <label htmlFor="loan-purpose">Loan Purpose</label>
-              <select id="loan-purpose">
+              <select id="loan-purpose" value={loanPurpose} onChange={(e) => setLoanPurpose(e.target.value)}>
                 <option value="">Select Purpose</option>
                 <option value="emergency">Emergency</option>
                 <option value="education">Education</option>
@@ -103,7 +81,7 @@ const UserDashboard = () => {
             </div>
             <div className="form-group">
               <label htmlFor="repayment-period">Repayment Period (months)</label>
-              <select id="repayment-period">
+              <select id="repayment-period" value={repaymentPeriod} onChange={(e) => setRepaymentPeriod(e.target.value)}>
                 <option value="">Select Period</option>
                 <option value="3">3 months</option>
                 <option value="6">6 months</option>
@@ -112,75 +90,77 @@ const UserDashboard = () => {
             </div>
             <div className="form-group">
               <label htmlFor="monthly-income">Monthly Income</label>
-              <input type="number" id="monthly-income" />
+              <input type="number" id="monthly-income" value={monthlyIncome} onChange={(e) => setMonthlyIncome(e.target.value)} />
             </div>
             <div className="form-group">
               <label htmlFor="loan-reason">Additional Information</label>
               <textarea
                 id="loan-reason"
                 rows="3"
-                placeholder="Please provide details about your loan request"
-              ></textarea>
+                placeholder="Please provide additional details about your loan request"
+                value={loanReason}
+                onChange={(e) => setLoanReason(e.target.value)}
+              />
             </div>
           </div>
-          <button className="btn" onClick={applyLoan}>
-            Submit Loan Application
-          </button>
+          <button className="btn" onClick={applyLoan}>Submit Loan Application</button>
         </div>
       )}
 
       {/* My Loans Tab */}
-      {activeTab === "my-loans" && (
-        <div id="my-loans" className="tab-content active">
+      {activeTab === 'my-loans' && (
+        <div className="tab-content">
           <h3>My Loan Applications</h3>
           <div id="loans-list">
-            {loans.length === 0 ? (
-              <p>No loan applications found.</p>
-            ) : (
-              <ul>
-                {loans.map((loan) => (
-                  <li key={loan.id}>
-                    Loan #{loan.id} - R{loan.amount} - {loan.status}
-                  </li>
-                ))}
-              </ul>
-            )}
+            <p>No loan applications found.</p>
           </div>
         </div>
       )}
 
       {/* Documents Tab */}
-      {activeTab === "documents" && (
-        <div id="documents" className="tab-content active">
+      {activeTab === 'documents' && (
+        <div className="tab-content">
           <h3>Upload Required Documents</h3>
-          <p>Please upload all required documents:</p>
-
-          {[
-            { label: "Certified ID Copy", type: "id-copy" },
-            { label: "Latest Payslip", type: "payslip" },
-            { label: "Proof of Residence", type: "proof-residence" },
-            { label: "3 Months Bank Statement", type: "bank-statement" },
-          ].map((doc) => (
-            <div className="document-upload" key={doc.type}>
-              <div className="upload-area">
-                <strong>{doc.label}</strong>
-                <br />
-                <input
-                  type="file"
-                  id={doc.type}
-                  onChange={(e) => handleFileUpload(e, doc.type)}
-                  accept=".pdf,.jpg,.jpeg,.png"
-                  style={{ display: "none" }}
-                />
-                <span onClick={() => document.getElementById(doc.type).click()}>
-                  Click to upload
-                </span>
-                <div className="upload-status">
-                  {documents[doc.type] && <em>{documents[doc.type]} uploaded</em>}
-                </div>
-              </div>
+          <p>Please upload all required documents to process your loan application:</p>
+          <div className="document-upload">
+            <div className="upload-area">
+              <strong>Certified ID Copy</strong><br />
+              <input type="file" id="id-copy" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+              <span onClick={() => document.getElementById('id-copy').click()}>Click to upload or drag and drop</span>
+              <div id="id-copy-status"></div>
             </div>
-          ))}
+          </div>
+
+          <div className="document-upload">
+            <div className="upload-area">
+              <strong>Latest Payslip</strong><br />
+              <input type="file" id="payslip" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+              <span onClick={() => document.getElementById('payslip').click()}>Click to upload or drag and drop</span>
+              <div id="payslip-status"></div>
+            </div>
+          </div>
+
+          <div className="document-upload">
+            <div className="upload-area">
+              <strong>Proof of Residence</strong><br />
+              <input type="file" id="proof-residence" accept=".pdf,.jpg,.jpeg,.png" style={{ display: 'none' }} />
+              <span onClick={() => document.getElementById('proof-residence').click()}>Click to upload or drag and drop</span>
+              <div id="proof-residence-status"></div>
+            </div>
+          </div>
+
+          <div className="document-upload">
+            <div className="upload-area">
+              <strong>3 Months Bank Statement</strong><br />
+              <input type="file" id="bank-statement" accept=".pdf" style={{ display: 'none' }} />
+              <span onClick={() => document.getElementById('bank-statement').click()}>Click to upload or drag and drop</span>
+              <div id="bank-statement-status"></div>
+            </div>
+          </div>
+
+          <div className="document-list" id="uploaded-documents">
+            {/* Uploaded documents will appear here */}
+          </div>
         </div>
       )}
     </div>
