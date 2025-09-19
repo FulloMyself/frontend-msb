@@ -30,7 +30,7 @@ const UserDashboard = () => {
     const fetchLoans = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await API.get('/loans/my-loans', {
+        const res = await API.get('/loans/my', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setMyLoans(res.data.loans);
@@ -63,7 +63,7 @@ const UserDashboard = () => {
       setLoanReason('');
 
       // Refresh My Loans
-      const res = await API.get('/loans/my-loans', {
+      const res = await API.get('/loans/my', {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMyLoans(res.data.loans);

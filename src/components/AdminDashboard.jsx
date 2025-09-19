@@ -22,7 +22,19 @@ const AdminDashboard = () => {
         <h2>Admin Dashboard</h2>
         <div>
           <span className="user-info" id="admin-name-display">Admin User</span>
-          <button className="logout-btn" onClick={() => alert('Logout functionality here')}>Logout</button>
+          <button
+  className="logout-btn"
+  onClick={() => {
+    // 1. Clear user session
+    localStorage.removeItem('token');
+    localStorage.removeItem('role');
+
+    // 2. Redirect to landing page
+    window.location.href = '#/'; 
+  }}
+>
+  Logout
+</button>
         </div>
       </div>
 
