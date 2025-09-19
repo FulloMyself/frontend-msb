@@ -12,17 +12,17 @@ const LoginModal = ({ show, onClose }) => {
 
   const handleLogin = async () => {
     try {
-      const res = await API.post('/auth/login', { email, password });
-// store token and role
-localStorage.setItem('token', res.data.token);
-localStorage.setItem('role', res.data.user.role);
-
-
-      if (res.data.user.role === 'user') window.location.href = '#/user-dashboard';
-      else window.location.href = '#/admin-dashboard';
-    } catch (err) {
-      alert('Login failed: ' + (err.response?.data?.message || err.message));
-    }
+  const res = await API.post('/auth/login', { email, password });
+  // response: { token, user: { id, name, email, role } }
+  localStorage.setItem('token', res.data.token);
+  localStorage.setItem('role', res.data.user.role);
+  localStorage.setItem('userName', res.data.user.name || '');
+  // redirect based on role
+  if (res.data.user.role === 'admin') window.location.href = '#/admin-dashboard';
+  else window.location.href = '#/user-dashboard';
+} catch (err) {
+  alert('Login failed: ' + (err.response?.data?.message || err.message));
+}
   };
 
   const handleRegister = async () => {
