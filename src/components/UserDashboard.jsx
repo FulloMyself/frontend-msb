@@ -14,14 +14,12 @@ const UserDashboard = () => {
 
   // User info & documents
   const [user, setUser] = useState(null);
-
   const [documents, setDocuments] = useState({
-  idCopy: null,
-  payslip: null,
-  proofOfResidence: null,  // <- rename from proofResidence
-  bankStatement: null
-});
-
+    idCopy: null,
+    payslip: null,
+    proofOfResidence: null,
+    bankStatement: null,
+  });
 
   // My loans
   const [myLoans, setMyLoans] = useState([]);
@@ -112,13 +110,16 @@ const UserDashboard = () => {
       const res = await API.post('/documents/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
       });
+
       alert(`${type} uploaded successfully!`);
 
+      // Update user documents
       setUser((prev) => ({
         ...prev,
         documents: res.data.documents,
       }));
 
+      // Clear selected file
       setDocuments({ ...documents, [type]: null });
     } catch (err) {
       alert('Failed to upload document: ' + (err.response?.data?.message || err.message));
@@ -126,6 +127,8 @@ const UserDashboard = () => {
   };
 
   if (!user) return <div>Loading dashboard...</div>;
+
+  const docTypes = ['idCopy', 'payslip', 'proofOfResidence', 'bankStatement'];
 
   return (
     <div id="user-dashboard" className="card dashboard">
@@ -157,7 +160,11 @@ const UserDashboard = () => {
         </div>
         <div className="stat-card">
           <div className="stat-number">
-            {user.documents ? Object.values(user.documents).filter(Boolean).flat().length : 0}
+            {user.documents
+              ? Object.values(user.documents)
+                  .flat()
+                  .filter(Boolean).length
+              : 0}
           </div>
           <div>Uploaded Documents</div>
         </div>
@@ -261,7 +268,7 @@ const UserDashboard = () => {
           <h3>Upload Required Documents</h3>
           <p>Please upload all required documents to process your loan application:</p>
 
-          {['idCopy', 'payslip', 'proofResidence', 'bankStatement'].map((doc) => (
+          {docTypes.map((doc) => (
             <div key={doc} className="document-upload">
               <div className="upload-area">
                 <strong>{doc.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</strong><br />
@@ -277,9 +284,7 @@ const UserDashboard = () => {
                 {user.documents && user.documents[doc] && (
                   <>
                     {Array.isArray(user.documents[doc])
-                      ? user.documents[doc].map((f, idx) => (
-                          <div key={idx} className="uploaded-file">Uploaded: {f}</div>
-                        ))
+                      ? user.documents[doc].map((f, idx) => <div key={idx} className="uploaded-file">Uploaded: {f}</div>)
                       : <div className="uploaded-file">Uploaded: {user.documents[doc]}</div>
                     }
                   </>
