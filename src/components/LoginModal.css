@@ -12,14 +12,14 @@
 }
 
 .login-modal {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 2rem;
-  width: 90%;
-  max-width: 400px;
-  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
   position: relative;
+  width: 400px;
+  background: #fff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.2);
   animation: fadeIn 0.3s ease-in-out;
+  overflow: hidden; /* ✅ important for sliding forms */
 }
 
 @keyframes fadeIn {
