@@ -14,11 +14,12 @@ const UserDashboard = () => {
 
   // User info & documents
   const [user, setUser] = useState(null);
+
   const [documents, setDocuments] = useState({
     idCopy: null,
     payslip: null,
     proofOfResidence: null,
-    bankStatement: null,
+    bankStatement: null
   });
 
   // My loans
@@ -34,7 +35,7 @@ const UserDashboard = () => {
       const res = await API.get('/users/me', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setUser(res.data.user);
+      setUser(res.data.user || { name: '', email: '', documents: {} });
     } catch (err) {
       console.error('Failed to fetch user:', err.response?.data || err.message);
     }
@@ -46,7 +47,7 @@ const UserDashboard = () => {
       const res = await API.get('/loans/my', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setMyLoans(res.data.loans);
+      setMyLoans(res.data.loans || []);
     } catch (err) {
       console.error('Failed to fetch loans:', err.response?.data || err.message);
     }
@@ -93,7 +94,7 @@ const UserDashboard = () => {
 
   // Handle file selection
   const handleFileChange = (e, type) => {
-    setDocuments({ ...documents, [type]: e.target.files[0] });
+    setDocuments((prev) => ({ ...prev, [type]: e.target.files[0] }));
   };
 
   // Upload document
@@ -116,19 +117,17 @@ const UserDashboard = () => {
       // Update user documents
       setUser((prev) => ({
         ...prev,
-        documents: res.data.documents,
+        documents: res.data.documents
       }));
 
-      // Clear selected file
-      setDocuments({ ...documents, [type]: null });
+      // Clear only this document type
+      setDocuments((prev) => ({ ...prev, [type]: null }));
     } catch (err) {
       alert('Failed to upload document: ' + (err.response?.data?.message || err.message));
     }
   };
 
   if (!user) return <div>Loading dashboard...</div>;
-
-  const docTypes = ['idCopy', 'payslip', 'proofOfResidence', 'bankStatement'];
 
   return (
     <div id="user-dashboard" className="card dashboard">
@@ -137,8 +136,8 @@ const UserDashboard = () => {
         <h2>User Dashboard</h2>
         <div>
           <div className="user-info">
-            <strong>{user.name}</strong> <br />
-            <small>{user.email}</small>
+            <strong>{user.name || 'User Name'}</strong> <br />
+            <small>{user.email || 'email@example.com'}</small>
           </div>
           <button
             className="logout-btn"
@@ -161,9 +160,10 @@ const UserDashboard = () => {
         <div className="stat-card">
           <div className="stat-number">
             {user.documents
-              ? Object.values(user.documents)
-                  .flat()
-                  .filter(Boolean).length
+              ? Object.values(user.documents).reduce(
+                  (acc, val) => acc + (Array.isArray(val) ? val.length : val ? 1 : 0),
+                  0
+                )
               : 0}
           </div>
           <div>Uploaded Documents</div>
@@ -268,7 +268,7 @@ const UserDashboard = () => {
           <h3>Upload Required Documents</h3>
           <p>Please upload all required documents to process your loan application:</p>
 
-          {docTypes.map((doc) => (
+          {['idCopy', 'payslip', 'proofOfResidence', 'bankStatement'].map((doc) => (
             <div key={doc} className="document-upload">
               <div className="upload-area">
                 <strong>{doc.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</strong><br />
@@ -284,7 +284,9 @@ const UserDashboard = () => {
                 {user.documents && user.documents[doc] && (
                   <>
                     {Array.isArray(user.documents[doc])
-                      ? user.documents[doc].map((f, idx) => <div key={idx} className="uploaded-file">Uploaded: {f}</div>)
+                      ? user.documents[doc].map((f, idx) => (
+                          <div key={idx} className="uploaded-file">Uploaded: {f}</div>
+                        ))
                       : <div className="uploaded-file">Uploaded: {user.documents[doc]}</div>
                     }
                   </>
