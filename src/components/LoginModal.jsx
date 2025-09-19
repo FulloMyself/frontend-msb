@@ -1,58 +1,71 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import API from '../api';
+import './LoginModal.css'; // Make sure to create this CSS file for styling
 
-function LoginModal({ show, onClose }) {
+const LoginModal = ({ show, onClose, toggleToRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
 
-  if (!show) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleLogin = async () => {
     try {
       const res = await API.post('/auth/login', { email, password });
 
       localStorage.setItem('token', res.data.token);
       localStorage.setItem('role', res.data.user.role);
 
-      if (res.data.user.role === 'user') navigate('/user-dashboard');
-      else navigate('/admin-dashboard');
+      if (res.data.user.role === 'user') window.location.href = '#/user-dashboard';
+      else window.location.href = '#/admin-dashboard';
 
-      onClose(); // close modal after successful login
     } catch (err) {
       alert('Login failed: ' + (err.response?.data?.message || err.message));
     }
   };
 
+  if (!show) return null;
+
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <h2>Login</h2>
-        <form onSubmit={handleSubmit}>
+    <div className="modal-backdrop">
+      <div className="login-modal">
+        <button className="close-btn" onClick={onClose}>×</button>
+        <h2 className="modal-title">Login</h2>
+
+        <div className="form-group">
+          <label htmlFor="login-email">Email</label>
           <input
             type="email"
-            placeholder="Email"
+            id="login-email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="Enter your email"
             required
           />
+        </div>
+
+        <div className="form-group">
+          <label htmlFor="login-password">Password</label>
           <input
             type="password"
-            placeholder="Password"
+            id="login-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            placeholder="Enter your password"
             required
           />
-          <button type="submit">Login</button>
-        </form>
-        <button className="close-btn" onClick={onClose}>
-          ×
+        </div>
+
+        <button className="btn login-btn" onClick={handleLogin}>
+          Login
         </button>
+
+        <div className="register-link">
+          <span>Don't have an account? </span>
+          <button className="toggle-register-btn" onClick={toggleToRegister}>
+            Register here
+          </button>
+        </div>
       </div>
     </div>
   );
-}
+};
 
 export default LoginModal;

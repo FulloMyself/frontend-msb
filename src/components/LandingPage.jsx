@@ -5,6 +5,15 @@ import LoginModal from './LoginModal';
 const LandingPage = () => {
   const [showLogin, setShowLogin] = useState(false);
 
+  // Function to toggle login modal
+  const toggleLogin = () => setShowLogin(prev => !prev);
+
+  // Function to redirect to registration page
+  const redirectToRegister = () => {
+    setShowLogin(false);
+    window.location.href = '#/register'; // or use navigate('/register') if using useNavigate
+  };
+
   return (
     <div>
       {/* Header */}
@@ -17,7 +26,7 @@ const LandingPage = () => {
             <li><a href="#requirements">Requirements</a></li>
             <li><a href="#contact">Contact</a></li>
           </ul>
-          <button className="login-btn" onClick={() => setShowLogin(true)}>Login</button>
+          <button className="login-btn" onClick={toggleLogin}>Login</button>
         </nav>
       </header>
 
@@ -31,20 +40,17 @@ const LandingPage = () => {
             <h2>Why Choose EstablishedLoans?</h2>
             <p>We make borrowing simple, fast, and transparent</p>
           </div>
-
           <div className="features-grid">
             <div className="feature-card">
               <div className="feature-icon">⚡</div>
               <h3>Lightning Fast Approval</h3>
               <p>Get approved in as little as 5 minutes with our streamlined application process and instant decision technology.</p>
             </div>
-
             <div className="feature-card">
               <div className="feature-icon">🔒</div>
               <h3>Secure & Transparent</h3>
               <p>Bank-level security protects your data. No hidden fees or surprise charges - we communicate all costs upfront.</p>
             </div>
-
             <div className="feature-card">
               <div className="feature-icon">💰</div>
               <h3>Same-Day Funding</h3>
@@ -132,7 +138,11 @@ const LandingPage = () => {
       </footer>
 
       {/* Login Modal */}
-      <LoginModal show={showLogin} onClose={() => setShowLogin(false)} />
+      <LoginModal 
+        show={showLogin} 
+        onClose={() => setShowLogin(false)} 
+        toggleToRegister={redirectToRegister} 
+      />
     </div>
   );
 };
