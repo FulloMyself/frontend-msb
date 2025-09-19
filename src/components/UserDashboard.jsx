@@ -32,9 +32,7 @@ const UserDashboard = () => {
   // Fetch user info
   const fetchUser = async () => {
     try {
-      const res = await API.get('/users/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get('/users/me');
       setUser(res.data.user || { name: '', email: '', documents: {} });
     } catch (err) {
       console.error('Failed to fetch user:', err.response?.data || err.message);
@@ -44,9 +42,7 @@ const UserDashboard = () => {
   // Fetch user's loans
   const fetchLoans = async () => {
     try {
-      const res = await API.get('/loans/my', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await API.get('/loans/my');
       setMyLoans(res.data.loans || []);
     } catch (err) {
       console.error('Failed to fetch loans:', err.response?.data || err.message);
@@ -68,17 +64,13 @@ const UserDashboard = () => {
     }
 
     try {
-      await API.post(
-        '/loans/apply',
-        {
-          amount: loanAmount,
-          purpose: loanPurpose,
-          repaymentPeriod,
-          monthlyIncome,
-          additionalInfo: loanReason,
-        },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await API.post('/loans/apply', {
+        amount: loanAmount,
+        purpose: loanPurpose,
+        repaymentPeriod,
+        monthlyIncome,
+        additionalInfo: loanReason,
+      });
 
       alert('Loan application submitted successfully!');
       setLoanAmount('');
@@ -109,7 +101,7 @@ const UserDashboard = () => {
 
     try {
       const res = await API.post('/documents/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
+        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
       alert(`${type} uploaded successfully!`);
