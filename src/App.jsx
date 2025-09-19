@@ -10,13 +10,19 @@ function App() {
   return (
     <Router>
       <Routes>
+        {/* Landing Page */}
         <Route path="/" element={<LandingPage />} />
-        <Route path="/" element={<Login />} />
+
+        {/* Auth Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+
+        {/* Dashboard Routes */}
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
-        <Route path="*" element={<Login />} /> {/* fallback */}
+
+        {/* Fallback Route */}
+        <Route path="*" element={<LandingPage />} />
       </Routes>
     </Router>
   );
