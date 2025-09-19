@@ -9,10 +9,12 @@ function App() {
   return (
     <Router>
       <Routes>
+        <Route path="/" element={<Login />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/user-dashboard" element={<UserDashboard />} />
         <Route path="/admin-dashboard" element={<AdminDashboard />} />
+        <Route path="*" element={<Login />} /> {/* fallback */}
       </Routes>
     </Router>
   );
