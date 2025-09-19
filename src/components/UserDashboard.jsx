@@ -104,7 +104,7 @@ const UserDashboard = () => {
     }
 
     const formData = new FormData();
-    formData.append(type, documents[type]); // only 1 file per type
+    formData.append(type, documents[type]);
 
     try {
       const res = await API.post('/documents/upload', formData, {
@@ -112,13 +112,11 @@ const UserDashboard = () => {
       });
       alert(`${type} uploaded successfully!`);
 
-      // Update user documents state
       setUser((prev) => ({
         ...prev,
         documents: res.data.documents,
       }));
 
-      // Clear local state
       setDocuments({ ...documents, [type]: null });
     } catch (err) {
       alert('Failed to upload document: ' + (err.response?.data?.message || err.message));
@@ -133,7 +131,10 @@ const UserDashboard = () => {
       <div className="nav-bar">
         <h2>User Dashboard</h2>
         <div>
-          <span className="user-info">{user.name}</span>
+          <div className="user-info">
+            <strong>{user.name}</strong> <br />
+            <small>{user.email}</small>
+          </div>
           <button
             className="logout-btn"
             onClick={() => {
@@ -149,8 +150,8 @@ const UserDashboard = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-number">{myLoans.filter((l) => l.status === 'active').length}</div>
-          <div>Active Loans</div>
+          <div className="stat-number">{myLoans.length}</div>
+          <div>Total Loan Applications</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">
@@ -262,8 +263,14 @@ const UserDashboard = () => {
             <div key={doc} className="document-upload">
               <div className="upload-area">
                 <strong>{doc.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</strong><br />
-                <input type="file" id={doc} onChange={(e) => handleFileChange(e, doc)} />
-                <button className="btn" onClick={() => uploadDocument(doc)}>Upload</button>
+                <input
+                  type="file"
+                  id={doc}
+                  style={{ display: 'none' }}
+                  onChange={(e) => handleFileChange(e, doc)}
+                />
+                <button className="btn" onClick={() => document.getElementById(doc).click()}>Select File</button>
+                <button className="btn" style={{ marginLeft: '5px' }} onClick={() => uploadDocument(doc)}>Upload</button>
 
                 {user.documents && user.documents[doc] && (
                   <>
