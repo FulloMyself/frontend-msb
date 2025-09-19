@@ -11,24 +11,25 @@ function AdminDashboard() {
         const res = await API.get('/admin/users', {
           headers: { Authorization: `Bearer ${token}` }
         });
-        setUsers(res.data);
+        // Make sure to take the array from the response
+        setUsers(res.data.users || []);
       } catch (err) {
         alert('Failed to fetch users: ' + err.response?.data?.message || err.message);
       }
     };
     fetchUsers();
   }, [token]);
-
   return (
     <div>
       <h2>Admin Dashboard</h2>
       <ul>
-        {users.map(user => (
+        {Array.isArray(users) && users.map(user => (
           <li key={user._id}>
             {user.email} - {user.role}
           </li>
         ))}
       </ul>
+
     </div>
   );
 }
