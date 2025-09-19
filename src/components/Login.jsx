@@ -13,7 +13,7 @@ function Login() {
       const res = await API.post('/auth/login', { email, password });
 
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.user.role); // <-- fixed
+      localStorage.setItem('role', res.data.user.role);
 
       if (res.data.user.role === 'user') navigate('/user-dashboard');
       else navigate('/admin-dashboard');

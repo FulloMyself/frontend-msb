@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: 'https://msb-backend-5km0.onrender.com/api', // <--- notice /api
+  baseURL: 'https://msb-backend-5km0.onrender.com/api', // <--- include /api
 });
 
 export default API;
