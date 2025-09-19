@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import API from '../api';
 import './UserDashboard.css';
 
@@ -12,7 +12,8 @@ const UserDashboard = () => {
   const [monthlyIncome, setMonthlyIncome] = useState('');
   const [loanReason, setLoanReason] = useState('');
 
-  // Documents state
+  // User info & documents
+  const [user, setUser] = useState(null);
   const [documents, setDocuments] = useState({
     idCopy: null,
     payslip: null,
@@ -20,26 +21,42 @@ const UserDashboard = () => {
     bankStatement: null,
   });
 
-  // My Loans
+  const [dragOver, setDragOver] = useState({
+    idCopy: false,
+    payslip: false,
+    proofResidence: false,
+    bankStatement: false,
+  });
+
   const [myLoans, setMyLoans] = useState([]);
+  const token = localStorage.getItem('token');
 
   const handleTabClick = (tab) => setActiveTab(tab);
 
-  // Fetch user's loans
+  const fetchUser = async () => {
+    try {
+      const res = await API.get('/users/me', { headers: { Authorization: `Bearer ${token}` } });
+      setUser(res.data.user);
+    } catch (err) {
+      console.error('Failed to fetch user:', err.response?.data || err.message);
+    }
+  };
+
+  const fetchLoans = async () => {
+    try {
+      const res = await API.get('/loans/my', { headers: { Authorization: `Bearer ${token}` } });
+      setMyLoans(res.data.loans);
+    } catch (err) {
+      console.error('Failed to fetch loans:', err.response?.data || err.message);
+    }
+  };
+
   useEffect(() => {
-    const fetchLoans = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await API.get('/loans/my', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setMyLoans(res.data.loans);
-      } catch (err) {
-        console.error('Failed to fetch loans:', err);
-      }
-    };
-    fetchLoans();
-  }, []);
+    if (token) {
+      fetchUser();
+      fetchLoans();
+    }
+  }, [token]);
 
   const applyLoan = async () => {
     if (!loanAmount || !loanPurpose || !repaymentPeriod || !monthlyIncome) {
@@ -48,25 +65,18 @@ const UserDashboard = () => {
     }
 
     try {
-      const token = localStorage.getItem('token');
       await API.post(
         '/loans/apply',
         { amount: loanAmount, purpose: loanPurpose, repaymentPeriod, monthlyIncome, additionalInfo: loanReason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       alert('Loan application submitted successfully!');
       setLoanAmount('');
       setLoanPurpose('');
       setRepaymentPeriod('');
       setMonthlyIncome('');
       setLoanReason('');
-
-      // Refresh My Loans
-      const res = await API.get('/loans/my', {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setMyLoans(res.data.loans);
+      fetchLoans();
     } catch (err) {
       alert('Failed to submit loan: ' + (err.response?.data?.message || err.message));
     }
@@ -76,6 +86,15 @@ const UserDashboard = () => {
     setDocuments({ ...documents, [type]: e.target.files[0] });
   };
 
+  const handleDrop = (e, type) => {
+    e.preventDefault();
+    setDragOver(prev => ({ ...prev, [type]: false }));
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setDocuments({ ...documents, [type]: e.dataTransfer.files[0] });
+      e.dataTransfer.clearData();
+    }
+  };
+
   const uploadDocument = async (type) => {
     if (!documents[type]) {
       alert('Please select a file to upload.');
@@ -83,40 +102,47 @@ const UserDashboard = () => {
     }
 
     const formData = new FormData();
-    formData.append('document', documents[type]);
-    formData.append('type', type);
+    formData.append(type, documents[type]);
 
     try {
-      const token = localStorage.getItem('token');
-      await API.post('/documents/upload', formData, {
+      const res = await API.post('/documents/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
       });
-
       alert(`${type} uploaded successfully!`);
+
+      setUser(prev => ({
+        ...prev,
+        documents: res.data.documents
+      }));
+
       setDocuments({ ...documents, [type]: null });
     } catch (err) {
       alert('Failed to upload document: ' + (err.response?.data?.message || err.message));
     }
   };
 
+  if (!user) return <div>Loading dashboard...</div>;
+
   return (
     <div id="user-dashboard" className="card dashboard">
+      {/* Navbar */}
       <div className="nav-bar">
         <h2>User Dashboard</h2>
         <div>
-          <span className="user-info">John Doe</span>
+          <span className="user-info">{user.name}</span>
           <button className="logout-btn" onClick={() => { localStorage.clear(); window.location.href = '#/'; }}>Logout</button>
         </div>
       </div>
 
+      {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
           <div className="stat-number">{myLoans.filter(l => l.status === 'active').length}</div>
           <div>Active Loans</div>
         </div>
         <div className="stat-card">
-          <div className="stat-number">1</div>
-          <div>Pending Documents</div>
+          <div className="stat-number">{user.documents ? Object.values(user.documents).filter(Boolean).length : 0}</div>
+          <div>Uploaded Documents</div>
         </div>
         <div className="stat-card">
           <div className="stat-number">R{myLoans.reduce((sum, l) => sum + l.amount, 0)}</div>
@@ -124,6 +150,7 @@ const UserDashboard = () => {
         </div>
       </div>
 
+      {/* Tabs */}
       <div className="tabs">
         <button className={`tab ${activeTab === 'apply-loan' ? 'active' : ''}`} onClick={() => handleTabClick('apply-loan')}>Apply for Loan</button>
         <button className={`tab ${activeTab === 'my-loans' ? 'active' : ''}`} onClick={() => handleTabClick('my-loans')}>My Loans</button>
@@ -165,7 +192,7 @@ const UserDashboard = () => {
             </div>
             <div className="form-group">
               <label htmlFor="loan-reason">Additional Information</label>
-              <textarea id="loan-reason" rows="3" placeholder="Please provide additional details about your loan request" value={loanReason} onChange={(e) => setLoanReason(e.target.value)} />
+              <textarea id="loan-reason" rows="3" placeholder="Additional details..." value={loanReason} onChange={(e) => setLoanReason(e.target.value)} />
             </div>
           </div>
           <button className="btn" onClick={applyLoan}>Submit Loan Application</button>
@@ -191,7 +218,7 @@ const UserDashboard = () => {
                 <tr><td colSpan="5">No loan applications found.</td></tr>
               ) : (
                 myLoans.map((loan) => (
-                  <tr key={loan.id}>
+                  <tr key={loan._id}>
                     <td>R{loan.amount}</td>
                     <td>{loan.purpose}</td>
                     <td>{loan.repaymentPeriod} months</td>
@@ -212,12 +239,24 @@ const UserDashboard = () => {
           <p>Please upload all required documents to process your loan application:</p>
 
           {['idCopy', 'payslip', 'proofResidence', 'bankStatement'].map((doc) => (
-            <div key={doc} className="document-upload">
+            <div key={doc} 
+                 className={`document-upload ${dragOver[doc] ? 'drag-over' : ''}`}
+                 onDragOver={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, [doc]: true })); }}
+                 onDragLeave={(e) => { e.preventDefault(); setDragOver(prev => ({ ...prev, [doc]: false })); }}
+                 onDrop={(e) => handleDrop(e, doc)}
+            >
               <div className="upload-area">
                 <strong>{doc.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}</strong><br />
-                <input type="file" id={doc} style={{ display: 'none' }} onChange={(e) => handleFileChange(e, doc)} />
-                <span onClick={() => document.getElementById(doc).click()}>Click to upload or drag and drop</span>
-                <button className="btn" onClick={() => uploadDocument(doc)} style={{ marginTop: '5px' }}>Upload</button>
+                <input type="file" style={{ display: 'none' }} id={doc} onChange={(e) => handleFileChange(e, doc)} />
+                <span onClick={() => document.getElementById(doc).click()} className="drag-text">
+                  {dragOver[doc] ? 'Release to upload' : 'Click to upload or drag & drop'}
+                </span>
+                <button className="btn" onClick={() => uploadDocument(doc)}>Upload</button>
+                {user.documents && user.documents[doc] && (
+                  <a href={user.documents[doc]} target="_blank" rel="noopener noreferrer" className="uploaded-file">
+                    {`Uploaded: ${user.documents[doc].split('/').pop()}`}
+                  </a>
+                )}
               </div>
             </div>
           ))}
