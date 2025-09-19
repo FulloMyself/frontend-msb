@@ -10,15 +10,12 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // before
-// const res = await API.post('/login', { email, password });
-// after
-const res = await API.post('/auth/login', { email, password });
+      const res = await API.post('/auth/login', { email, password });
 
       localStorage.setItem('token', res.data.token);
-      localStorage.setItem('role', res.data.role); // 'user' or 'admin'
+      localStorage.setItem('role', res.data.user.role); // <-- fixed
 
-      if (res.data.role === 'user') navigate('/user-dashboard');
+      if (res.data.user.role === 'user') navigate('/user-dashboard');
       else navigate('/admin-dashboard');
     } catch (err) {
       alert('Login failed: ' + err.response?.data?.message || err.message);
