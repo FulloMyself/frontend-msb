@@ -1,4 +1,3 @@
-// frontend/src/components/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
 import API from '../api';
 import './AdminDashboard.css';
@@ -14,6 +13,7 @@ const AdminDashboard = () => {
     if (!token) return;
     const headers = { Authorization: `Bearer ${token}` };
 
+    // Fetch users
     API.get('/admin/users', { headers })
       .then(res => setUsers(res.data.users || []))
       .catch(err => {
@@ -21,6 +21,7 @@ const AdminDashboard = () => {
         setUsers([]);
       });
 
+    // Fetch loans
     API.get('/admin/loans', { headers })
       .then(res => setLoans(res.data.loans || []))
       .catch(err => {
@@ -28,6 +29,7 @@ const AdminDashboard = () => {
         setLoans([]);
       });
 
+    // Fetch documents
     API.get('/admin/documents', { headers })
       .then(res => setDocuments(res.data.documents || []))
       .catch(err => {
@@ -68,7 +70,9 @@ const AdminDashboard = () => {
         <div className="tab-content">
           <h3>All Users</h3>
           <table className="user-table">
-            <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Registered</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Role</th><th>Registered</th><th>Actions</th></tr>
+            </thead>
             <tbody>
               {users.map(u => (
                 <tr key={u._id}>
@@ -89,7 +93,9 @@ const AdminDashboard = () => {
         <div className="tab-content">
           <h3>Loan Applications</h3>
           <table className="user-table">
-            <thead><tr><th>User</th><th>Amount</th><th>Purpose</th><th>Period</th><th>Status</th><th>Date Applied</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr><th>User</th><th>Amount</th><th>Purpose</th><th>Period</th><th>Status</th><th>Date Applied</th><th>Actions</th></tr>
+            </thead>
             <tbody>
               {loans.map(l => (
                 <tr key={l._id}>
@@ -103,10 +109,10 @@ const AdminDashboard = () => {
                     <button className="view-btn" onClick={() => alert(JSON.stringify(l, null, 2))}>View</button>
                     <select onChange={(e) => {
                       const status = e.target.value;
-                      API.post(`/admin/loans/${l._id}/status`, { status }, { headers: { Authorization: `Bearer ${token}` } })
+                      API.put(`/admin/loan/${l._id}/status`, { status }, { headers }) // changed to PUT
                         .then(() => window.location.reload())
                         .catch(err => console.error('Failed to update loan status', err));
-                    }} defaultValue={l.status}>
+                    }} value={l.status}>
                       <option value="pending">Pending</option>
                       <option value="under-review">Under Review</option>
                       <option value="approved">Approved</option>
@@ -124,19 +130,22 @@ const AdminDashboard = () => {
         <div className="tab-content">
           <h3>User Documents</h3>
           <table className="user-table">
-            <thead><tr><th>User</th><th>Type</th><th>URL</th><th>Actions</th></tr></thead>
+            <thead>
+              <tr><th>User</th><th>Type</th><th>URL</th><th>Actions</th></tr>
+            </thead>
             <tbody>
               {documents.map((d, i) => (
                 <tr key={i}>
-                  <td>{d.userEmail || d.user?.email}</td>
+                  <td>{d.userEmail}</td>
                   <td>{d.type}</td>
-                  <td><a href={d.url} target="_blank" rel="noreferrer">View</a></td>
+                  <td><a href={d.fileUrl} target="_blank" rel="noreferrer">View</a></td>
                   <td>
                     <select onChange={(e) => {
-                      API.post(`/admin/documents/${d._id}/status`, { status: e.target.value }, { headers: { Authorization: `Bearer ${token}` }})
+                      const status = e.target.value;
+                      API.put(`/admin/documents/${d.userId}/${d.type}/${d.index}/status`, { status }, { headers }) // changed to PUT with userId/type/index
                         .then(() => window.location.reload())
                         .catch(err => console.error('Failed to update doc status', err));
-                    }}>
+                    }} value={d.status}>
                       <option value="pending">Pending</option>
                       <option value="approved">Approved</option>
                       <option value="rejected">Rejected</option>
