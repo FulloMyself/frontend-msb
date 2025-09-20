@@ -14,7 +14,7 @@ const LoginModal = ({ show, onClose }) => {
   // --- LOGIN ---
   const handleLogin = async () => {
     try {
-      const res = await API.post('/api/auth/login', { email, password });
+      const res = await API.post('/auth/login', { email, password });
 
       // store token and user info
       localStorage.setItem('token', res.data.token); // important for auth
@@ -37,7 +37,7 @@ const LoginModal = ({ show, onClose }) => {
     }
 
     try {
-      await API.post('/api/auth/register', {
+      await API.post('/auth/register', {
         name,
         email,
         password,
